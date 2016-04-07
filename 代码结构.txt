@@ -1,0 +1,52 @@
+FeiQ.h				主程序头文件
+FeiQ.cpp			主程序定义文件，创建了一个新的窗体对象pFrame
+
+ChatView.cpp		//#include "FileThread.h"->若
+ChatView.h
+
+FileClient.h		
+FileClient.cpp			初始化文件客户端，发送文件，接收数据，客户端socket		
+
+问题：
+1.//创建一个界面线程  挂起
+CFileThread* pFileThread = (CFileThread*)AfxBeginThread(RUNTIME_CLASS(CFileThread),THREAD_PRIORITY_NORMAL,0,CREATE_SUSPENDED);
+
+2.FileServer.cpp::OnConnect()
+//创建一个界面线程(具有消息循环)  挂起
+CFileThread* pFileThread = (CFileThread*)AfxBeginThread( RUNTIME_CLASS(CFileThread),THREAD_PRIORITY_NORMAL,0,CREATE_SUSPENDED);
+
+3.程序是64位程序，不兼容win32应用程序
+
+4.没有支持文件拖拽功能
+
+5.FeiQ.cpp->AfxSocketInit()函数
+			AfxEnableControlContainer();函数
+			SetRegistryKey()函数
+			LoadFrame()函数
+			的作用
+
+
+
+
+ChatView.cpp::OnBtnFile() /*获取待发送文件的信息，获取目标主机的IP地址，开始群发或者单发;创建发送文件线程*/
+  ->FileThread.cpp::InitInstance()/*判断是发送文件模式还是接收文件模式；这里开始m_FileSendDlg.DoModal();*/
+    ->FileSendDlg.cpp::OnInitDialog() /*将m_bDownSend  = FALSE;调用OnBtnSend()*/
+	  ->OnBtnSend() /*m_FileClient.InitClient()初始化文件客户端；m_FileClient.ConnectServer(m_strIP)连接服务器，开启文件发送线程*/
+	    ->FileSendDlg.cpp::SendThread() /*文件发送线程，调用FileClient::SendFile()方法*/
+		while（文件是否传输完毕）
+		{
+		  ->FileClient::SendFile() /*准备发送数据头，发送文件信息，发送文件数据*/
+		    ->FileThread.cpp::InitInstance()/*判断是发送文件模式还是接收文件模式；这里开始m_FileRecvDlg.DoModal();*/
+		  ->FileRecvDlg.cpp::OnInitDialog() /*调用RecvData((LPSTR)&header, sizeof(header));RecvData((LPSTR)&m_sendFile, sizeof(m_sendFile));接收传输过来的数据*/
+		}
+		
+		
+->FileClient::SendFile() 
+	{
+		pWndProgress->SetRange32(0, sendFile.nFileLength);
+	}
+->FileRecvDlg.cpp::OnInitDialog() 
+	{
+		RecvData((LPSTR)&header, sizeof(header));//数据头
+		RecvData((LPSTR)&m_sendFile, sizeof(m_sendFile));//文件信息：文件名，文件大小
+	}
